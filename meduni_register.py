@@ -6,7 +6,6 @@ from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait, Select
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.support import expected_conditions as EC
-import pause
 
 #your current semester
 semester = 3
@@ -22,9 +21,9 @@ user = "user"
 password = "password"
 
 #leave this one alone if you don't know what you are doing
-retryCount=200
+retryCount=75
 driver = webdriver.Chrome()
-wait = WebDriverWait(driver,3)
+wait = WebDriverWait(driver,5)
 
 def switchFrame(frameName):
     driver.switch_to.default_content()
@@ -40,11 +39,11 @@ def waitTillStart(startDate):
     hour = int(startDate.split('.')[2].split(' ')[1].split(':')[0])
     minute = int(startDate.split('.')[2].split(' ')[1].split(':')[1])
     to = datetime(year,month,day,hour,minute,0,0)
-    print(to)
+    print("start: "+str(to))
     to = to - timedelta(seconds = 10)
-    print(to)
+    print("start minus 10 sekunden: "+str(to))
     now = datetime.now
-    print(now())
+    print("jetzt: "+str(now()))
     #to = (now() + timedelta(days = 1)).replace(hour=1, minute=0, second=0)
     print("Waiting " + str((to-now()).seconds) +" seconds")
     sleep((to-now()).seconds)
@@ -56,16 +55,24 @@ wait.until(EC.visibility_of(driver.find_element_by_css_selector('img[name="key"]
 driver.find_element_by_css_selector('img[name="key"]').click()
 
 switchFrame('detail')
-driver.find_element_by_css_selector('input[type="text"]').send_keys(user)
-driver.find_element_by_css_selector('input[type="password"]').send_keys(password)
-driver.find_element_by_css_selector('button[type="submit"]').click()
+sleep(0.5)
+wait.until(EC.visibility_of(driver.find_element_by_css_selector('input[type="TEXT"]')))
+driver.find_element_by_css_selector('input[type="TEXT"]').send_keys(user)
+driver.find_element_by_css_selector('input[type="PASSWORD"]').send_keys(password)
+driver.find_element_by_css_selector('button[type="SUBMIT"]').click()
 
+
+sleep(0.5)
 wait.until(EC.visibility_of(driver.find_element_by_css_selector('a[title="Anmeldung zu Modulen')))
 driver.find_element_by_css_selector('a[title="Anmeldung zu Modulen"]').click()
 
+
+sleep(0.5)
 studiumSelect = Select(driver.find_element_by_name('pStudiumNr'))
 semesterSelect = Select(driver.find_element_by_name('pSemInStp'))
 
+
+sleep(0.5)
 studiumSelect.select_by_visible_text(studienPlan)
 semesterSelect.select_by_value(str(semester))
 driver.find_element_by_id('S1').click()
@@ -78,6 +85,6 @@ for x in range(retryCount):
         groupRow.find_element_by_css_selector('button[title="Zur Planungsgruppe anmelden"]').click()
     except NoSuchElementException as e:
         print("Haven't found a free space " + str(x) + " times")
-        sleep(0.1)
         reloadDetailFrame()
+        sleep(0.2)
     
