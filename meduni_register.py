@@ -1,22 +1,24 @@
 #needs pip install selenium and python 3
+from re import findall
 from time import sleep
 from datetime import datetime
 from datetime import timedelta
 from selenium import webdriver
+from sys import exit as sysexit
 from selenium.webdriver.support.ui import WebDriverWait, Select
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.support import expected_conditions as EC
 
 #your current semester
-semester = 3
+semester = 5
 #enter your Studienplan just like in the dropdown when selecting your semester
 studienPlan = 'Zahnmedizin'
 #this is the group you wanna be in
-gruppe = 3
+gruppe = 1
 
 #replace with you user and password
-user = "user"
-password = "password"
+user = "n11822856"
+password = "VikiKo65"
 
 #leave this one alone if you don't know what you are doing
 retryCount=75
@@ -45,11 +47,22 @@ def waitTillStart():
     print("start: "+str(to))
     to = to - timedelta(seconds = 10)
     print("start minus 10 seconds: "+str(to))
-    now = datetime.now
-    print("now: "+str(now()))
+    now = datetime.now()
+    print("now: "+str(now))
     #to = (now() + timedelta(days = 1)).replace(hour=1, minute=0, second=0)
-    print("Waiting " + str((to-now()).seconds) +" seconds")
-    sleep((to-now()).seconds)
+    if to > now:
+        print("Waiting " + str((to-now()).seconds) +" seconds")
+        sleep((to-now()).seconds)
+def checkIfSignedUp(pre):
+    try:
+        if driver.find_element_by_css_selector('button[title="Von der Planungsgruppe abmelden"]').is_displayed() :
+            driver.quit()
+            if pre:
+                sysexit("Already signed up for this semester")
+            else:
+                sysexit("Signing up completed")
+    except Exception:
+        pass
 
 driver.get("https://campus.meduniwien.ac.at/med.campus/webnav.ini")
 
@@ -80,12 +93,16 @@ studiumSelect.select_by_visible_text(studienPlan)
 semesterSelect.select_by_value(str(semester))
 driver.find_element_by_id('S1').click()
 
+checkIfSignedUp(True)
+
 waitTillStart()
 
 for x in range(retryCount):
+    checkIfSignedUp(False)
     try:
-        groupRow = driver.find_element_by_css_selector("tr:nth-of-type(" + str(gruppe + 1 ) + ")")
+        groupRow = driver.find_element_by_css_selector("table.list tr:nth-of-type(" + str(gruppe + 1 ) + ")")
         groupRow.find_element_by_css_selector('button[title="Zur Planungsgruppe anmelden"]').click()
+        sleep(0.05)
     except NoSuchElementException as e:
         print("Haven't found a free space " + str(x) + " times")
         reloadDetailFrame()
